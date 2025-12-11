@@ -8,6 +8,11 @@ from langchain_community.document_loaders import PyPDFLoader
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
+import pymupdf as fitz
+
+from easyocr import Reader
+ocr_reader = Reader(["en","hi"],gpu=True)
+
 from embeddings import embedding_model, qdrant_client
 from utils.splitter import get_text_splitter
 
@@ -15,67 +20,120 @@ router = APIRouter()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-def create_embeddings_from_pdf(filepath: Path, collection_name: str):
+# Extract Images From PDF Page
+def extract_images_from_page(pdf_doc, page_index):
+    page = pdf_doc[page_index]
+    images = []
+    
+    for img in page.get_images(full=True):
+        xref = img[0]
+        base_image = pdf_doc.extract_image(xref)
+        image_bytes = base_image.get("image")
+        if image_bytes:
+            images.append(image_bytes)
+
+    return images
+
+# OCR on All Images in the Page
+def ocr_images(image_bytes_list):
+    full_text = ""
+
+    for img_bytes in image_bytes_list:
+        ocr_output = ocr_reader.readtext(img_bytes, detail=0)
+        if ocr_output:
+            full_text += " ".join(ocr_output) + "\n"
+
+    return full_text.strip()
+
+
+def create_embeddings_from_pdf(filepath: Path, filename: str , collection_name: str):
     print(f"[INFO] Loading PDF: {filepath}")
 
+    # Load text pages
     loader = PyPDFLoader(str(filepath))
     pages = loader.load()
 
+    # Load PyMuPDF for images
+    pdf_doc = fitz.open(filepath)
+    
     splitter = get_text_splitter()
     chunks = []
 
-    for p in pages:
-        page_num = p.metadata.get("page", 0)
-        page_label = p.metadata.get("page_label", "")
+    for idx, p in enumerate(pages):
+        page_num = p.metadata.get("page", idx + 1)
+        
+        # 1. Extract normal text
+        text_content = p.page_content or ""
 
-        split = splitter.split_text(p.page_content)
-        for chunk_text in split:
+        # 2. Extract page images
+        images = extract_images_from_page(pdf_doc, idx)
+
+        # 3. OCR from images
+        ocr_text = ocr_images(images)
+
+        # 4. Combine everything
+        combined_text = text_content
+        if ocr_text:
+            combined_text += "\n" + ocr_text
+
+        # 5. Split for embeddings
+        split_chunks = splitter.split_text(combined_text)
+
+        for chunk in split_chunks:
             chunks.append({
-                "text": chunk_text,
+                "text": chunk,
                 "metadata": {
-                    "page": page_num,
-                    "page_label": page_label,
-                    "source": filepath.name
+                    "page": page_num ,
+                    "source": filepath.name,
+                    "ocr_used": bool(ocr_text)
                 }
             })
 
-    print(f"[INFO] Chunks created: {len(chunks)}")
+    print(f"[INFO] Total chunks prepared: {len(chunks)}")
 
-    # Create fresh Qdrant collection
+
+    # Create Qdrant Collection
     qdrant_client.recreate_collection(
         collection_name=collection_name,
         vectors_config={"size": 768, "distance": "Cosine"}
     )
 
-    # FIX: Store metadata separately in payload
+    # Insert into Qdrant
     points = []
-    for idx, ch in enumerate(chunks):
-        embedding = embedding_model.embed_query(ch["text"])
+
+    for i, chunk in enumerate(chunks):
+        emb = embedding_model.embed_query(chunk["text"])
 
         points.append(
             PointStruct(
-                id=idx,
-                vector=embedding,
+                id=i,
+                vector=emb,
                 payload={
-                    "page_content": ch["text"],  # Changed from "text"
-                    "metadata": ch["metadata"]   # Store metadata as nested object
+                    "page_content": chunk["text"],
+                    "metadata": chunk["metadata"]
                 }
             )
         )
 
+        # Batch upload every 20 points
         if len(points) == 20:
-            qdrant_client.upsert(collection_name=collection_name, points=points)
+            qdrant_client.upsert(collection_name, points=points)
             points = []
 
     if points:
-        qdrant_client.upsert(collection_name=collection_name, points=points)
+        qdrant_client.upsert(collection_name, points=points)
 
-    print("[INFO] Embeddings stored successfully!")
+    print("[INFO] OCR + Text Embeddings stored successfully!")
+
+def cleanup_file(filepath : Path):
+    if filepath.exists():
+        os.remove(filepath)
+        print(f"[INFO] Cleaned Up File")
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = BackgroundTasks()
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...)
 ):
     filepath = UPLOAD_DIR / file.filename
 
@@ -85,8 +143,11 @@ async def upload_file(
     unique_collection = f"doc_{uuid.uuid4().hex}"
 
     # Run embeddings in background
-    background_tasks.add_task(create_embeddings_from_pdf, filepath, unique_collection)
-
+    background_tasks.add_task(create_embeddings_from_pdf, filepath, file.filename , unique_collection)
+    
+    #remove file from server
+    background_tasks.add_task(cleanup_file , filepath)
+    
     return {
         "status": "success",
         "message": "File uploaded. Embedding process started.",
