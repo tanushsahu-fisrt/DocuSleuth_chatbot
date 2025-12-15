@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IoIosCloseCircleOutline } from "react-icons/io";
+import { CiCircleChevDown } from "react-icons/ci";
 
 const ChatPopUp = ({ setOpenChat }) => {
   const [message, setMessage] = useState("");
@@ -54,7 +54,7 @@ const ChatPopUp = ({ setOpenChat }) => {
           className="text-gray-200 hover:text-white text-xl"
           onClick={() => setOpenChat(false)}
         >
-          <IoIosCloseCircleOutline size={25} color="hover:bg-white" className="rounded-xl hover:bg-red-500"/>
+          <CiCircleChevDown size={25} color="hover:bg-white" className="rounded-xl hover:bg-red-500"/>
         </button>
       </div>
 

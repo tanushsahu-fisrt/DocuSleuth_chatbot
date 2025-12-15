@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import PdfViewer from "./component/PdfViewer";
+import PdfViewerv1 from "./component/PdfViewerV1";
 
 const App = () => {
   const [file, setFile] = useState(null);

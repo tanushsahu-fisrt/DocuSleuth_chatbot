@@ -49,7 +49,7 @@ async def query_doc(body: QueryRequest):
 
     # Retrieval phase
     start_retrieval = time.time()
-    docs = vector_store.similarity_search(body.question, k=3)
+    docs = vector_store.similarity_search(body.question, k=4)
     end_retrieval = time.time()
     retrieval_time = round(end_retrieval - start_retrieval, 4)
 

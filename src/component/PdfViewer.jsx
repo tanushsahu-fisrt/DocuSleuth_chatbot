@@ -51,7 +51,7 @@ const PdfViewer = ({ onFileUpload }) => {
             Array.from(new Array(numPages), (el, index) => (
                 <Page 
                   key={index} 
-                  renderTextLayer={false}
+                  renderTextLayer={true}
                   renderAnnotationLayer={false}
                   pageNumber={index + 1} 
                 />
