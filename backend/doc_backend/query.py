@@ -15,7 +15,7 @@ class QueryRequest(BaseModel):
     collection: str
 
 llm = ChatOllama(
-    model="llama3.1:8b-instruct-q4_K_M",
+    model="mistral:7b-instruct-q4_K_M",
     temperature=0.1
 )
 
@@ -79,7 +79,10 @@ async def query_doc(body: QueryRequest):
         locations.append({
             "page": page,
             "label": label,
-            "snippet": d.page_content[:150] + "..." if len(d.page_content) > 150 else d.page_content
+            "snippet": d.page_content[:150] + "..." if len(d.page_content) > 150 else d.page_content,
+            "full_text": d.page_content,  # ← Full chunk text
+            "char_start": meta.get("char_start"),  # ← Start position
+            "char_end": meta.get("char_end")
         })
 
         # Build context for LLM
@@ -125,6 +128,8 @@ async def query_doc(body: QueryRequest):
             "retrieval_time": retrieval_time,
             "generation_time": generation_time
         }
+        
+        print(response_data)
 
         # Frontend expects response as a JSON string inside "response" key
         import json

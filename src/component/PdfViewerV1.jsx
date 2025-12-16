@@ -4,7 +4,10 @@ import { highlightPlugin } from "@react-pdf-viewer/highlight";
 import { themePlugin } from '@react-pdf-viewer/theme';
 import { searchPlugin } from '@react-pdf-viewer/search';
 import { zoomPlugin } from "@react-pdf-viewer/zoom";
+import { pageNavigationPlugin  , RenderCurrentPageLabelProps  } from '@react-pdf-viewer/page-navigation';
 
+// Import styles
+import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
 import '@react-pdf-viewer/zoom/lib/styles/index.css';
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/highlight/lib/styles/index.css";
@@ -22,8 +25,10 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
   
   // Initialize plugins
   const zoomPluginInstance = zoomPlugin();
-  const { CurrentScale, ZoomIn, ZoomOut } = zoomPluginInstance;
 
+  const pageNavigationPluginInstance = pageNavigationPlugin();
+  const { CurrentPageLabel  , NumberOfPages } = pageNavigationPluginInstance;
+  
   const searchPluginInstance = searchPlugin({
     keyword: searchKeyword,
   });
@@ -101,6 +106,13 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
 
       {/* Search Bar */}
       <div className="w-[80%] bg-white shadow-md rounded-lg p-4 mb-1 flex items-center gap-3">
+
+        <CurrentPageLabel>
+                {(props) => (
+                    <span>{`${props.currentPage + 1} of ${props.numberOfPages}`}</span>
+                )}
+        </CurrentPageLabel>
+        
         <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
           <svg 
             className="w-5 h-5 text-gray-400" 
@@ -135,7 +147,9 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
         </div>
         
         {/* Pass the zoom plugin instance */}
-        <CustomizeZoomButton zoomPluginInstance={zoomPluginInstance} />
+        <CustomizeZoomButton 
+          zoomPluginInstance={zoomPluginInstance} 
+        />
 
         <button
           onClick={handleSearch}
@@ -183,7 +197,8 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
                 highlightPluginInstance, 
                 themePluginInstance, 
                 searchPluginInstance,
-                zoomPluginInstance
+                zoomPluginInstance,
+                pageNavigationPluginInstance
               ]}
               defaultScale={0.75}
               theme="auto"

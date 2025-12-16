@@ -79,16 +79,27 @@ def create_embeddings_from_pdf(filepath: Path, filename: str , collection_name: 
         # 5. Split for embeddings
         split_chunks = splitter.split_text(combined_text)
 
+        # Track where each chunk appears in the page
+        current_position = 0
         for chunk in split_chunks:
+            
+            # Find chunk position in full page text
+            chunk_start = text_content.find(chunk, current_position)
+            chunk_end = chunk_start + len(chunk)
+
             chunks.append({
                 "text": chunk,
                 "metadata": {
                     "page": page_num ,
                     "source": filepath.name,
-                    "ocr_used": bool(ocr_text)
+                    "ocr_used": bool(ocr_text),
+                    "char_start": chunk_start,  # ← Position in page
+                    "char_end": chunk_end,      # ← Position in page
+                    "full_page_text": text_content[:500]  # ← Preview of full page text 
                 }
             })
-
+            
+            current_position = chunk_end
     print(f"[INFO] Total chunks prepared: {len(chunks)}")
 
 
