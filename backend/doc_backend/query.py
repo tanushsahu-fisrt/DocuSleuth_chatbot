@@ -49,7 +49,7 @@ async def query_doc(body: QueryRequest):
 
     # Retrieval phase
     start_retrieval = time.time()
-    docs = vector_store.similarity_search(body.question, k=4)
+    docs = vector_store.similarity_search(body.question, k=5)
     end_retrieval = time.time()
     retrieval_time = round(end_retrieval - start_retrieval, 4)
 
@@ -75,14 +75,16 @@ async def query_doc(body: QueryRequest):
         print("Content preview:", d.page_content[:300])
         print("--------------------------------------------------------")
 
-        # Build locations list for UI
+        # Build locations list for UI with highlight data
         locations.append({
             "page": page,
+            "pageIndex": page - 1 if isinstance(page, int) else 0,  # 0-indexed for frontend
             "label": label,
             "snippet": d.page_content[:150] + "..." if len(d.page_content) > 150 else d.page_content,
-            "full_text": d.page_content,  # ← Full chunk text
-            "char_start": meta.get("char_start"),  # ← Start position
-            "char_end": meta.get("char_end")
+            "full_text": d.page_content,  # Full chunk text for highlighting
+            "char_start": meta.get("char_start"),
+            "char_end": meta.get("char_end"),
+            "highlightText": d.page_content  # Text to highlight
         })
 
         # Build context for LLM
@@ -91,6 +93,7 @@ async def query_doc(body: QueryRequest):
             f"{d.page_content}\n"
         )
         context_blocks.append(context_block)
+
 
     context = "\n\n".join(context_blocks)
 

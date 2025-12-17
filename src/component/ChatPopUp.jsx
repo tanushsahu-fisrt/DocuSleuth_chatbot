@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { CiCircleChevDown } from "react-icons/ci";
 
-const ChatPopUp = ({ setOpenChat }) => {
+const ChatPopUp = ({ setOpenChat, onHighlightLocations }) => {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [botAnswering, setBotAnswering] = useState(false);
@@ -38,12 +38,29 @@ const ChatPopUp = ({ setOpenChat }) => {
           },
         ]);
 
+        // Send highlight data to PDF viewer
+        if (parsed.locations && onHighlightLocations) {
+          onHighlightLocations(parsed.locations);
+        }
+
         setBotAnswering(false);
       })
-      .catch((err) => console.log("Fetching error:", err));
+      .catch((err) => {
+        console.log("Fetching error:", err);
+        setBotAnswering(false);
+      });
 
     setMessage("");
   };
+
+  const handleLocationClick = (location) => {
+    console.log("Location clicked:", location?.highlightText);
+    // Trigger highlight for specific location when clicked
+    if (onHighlightLocations) {
+      onHighlightLocations([location]);
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 w-[420px] h-[85vh] bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
@@ -82,9 +99,13 @@ const ChatPopUp = ({ setOpenChat }) => {
 
                   {msg.locations?.length > 0 && (
                     <div className="mt-2 bg-gray-100 rounded-md p-2">
-                      <p className="font-medium text-gray-700">Locations:</p>
+                      <p className="font-medium text-gray-700">Sources:</p>
                       {msg.locations.map((loc, i) => (
-                        <div key={i} className="text-sm text-gray-600 ml-2">
+                        <div 
+                          key={i} 
+                          className="text-sm text-gray-600 ml-2 cursor-pointer hover:bg-yellow-200 hover:text-blue-500 p-1 rounded transition"
+                          onClick={() => handleLocationClick(loc)}
+                        >
                           • Page {loc.page}: <span className="italic">{loc.label}</span>
                           <br />
                           <span className="text-gray-500">"{loc.snippet}"</span>

@@ -32,7 +32,7 @@ const UploadNewDocButton = ({ setFile, setIsFileUploaded, setFileName }) => {
         />
             <RiUploadCloud2Fill  size={20}/> 
         <p>
-            Upload New Doc
+            Upload
         </p>            
     </label>
   );
