@@ -1,33 +1,29 @@
+// FloatingButton.jsx
 import { useState } from "react";
 import ChatPopUp from "./ChatPopUp";
 
-const FloatingButton = () => {
+const FloatingButton = ({ onHighlightLocations }) => {
+  const [openChat, setOpenChat] = useState(false);
 
-    const [openChat , setOpenChat] = useState(false);
-
-    return (
-        
-        <>
-            {openChat ?
-            (
-                <ChatPopUp  setOpenChat={setOpenChat} />
-            )
-            :
-            (   
-            <>
-
-                <button
-                    className="fixed bottom-6 right-6 font-bold bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 hover:scale-110 transition"
-                    onClick={() => setOpenChat(!openChat)}
-                >
-                    ASK AI
-                </button>
-            </>
-            )
-            }
-        </>
-    
-    );
-}
+  return (
+    <>
+      {openChat && (
+        <ChatPopUp 
+          setOpenChat={setOpenChat} 
+          onHighlightLocations={onHighlightLocations}
+        />
+      )}
+      
+      {!openChat && (
+        <button
+          onClick={() => setOpenChat(true)}
+          className="fixed bottom-6 right-6 bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition"
+        >
+          💬 Chat
+        </button>
+      )}
+    </>
+  );
+};
 
 export default FloatingButton;

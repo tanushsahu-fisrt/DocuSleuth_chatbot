@@ -56,7 +56,7 @@ const CustomizeZoomButton = ({ zoomPluginInstance }) => {
           {/* Menu */}
           <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 min-w-[200px]">
             {/* Zoom In/Out Buttons */}
-            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-200">
+            <div className="flex items-center gap-2  border-gray-200">
               <ZoomOut>
                 {(props) => (
                   <button
@@ -94,46 +94,6 @@ const CustomizeZoomButton = ({ zoomPluginInstance }) => {
               </ZoomIn>
             </div>
 
-            {/* Preset Zoom Levels */}
-            {/* <div className="space-y-1">
-              <p className="text-xs text-gray-500 mb-2 px-1">Quick Zoom:</p>
-              {zoomLevels.map((level) => (
-                <Zoom key={level} scale={level}>
-                  {(props) => (
-                    <button
-                      onClick={() => {
-                        props.onClick();
-                        setIsOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 hover:text-purple-700 transition text-sm"
-                    >
-                      {level === 1.0 ? (
-                        <span className="font-medium">{Math.round(level * 100)}% (Fit)</span>
-                      ) : (
-                        <span>{Math.round(level * 100)}%</span>
-                      )}
-                    </button>
-                  )}
-                </Zoom>
-              ))}
-            </div> */}
-
-            {/* Reset to Fit */}
-            {/* <div className="mt-3 pt-3 border-t border-gray-200">
-              <Zoom scale={1.0}>
-                {(props) => (
-                  <button
-                    onClick={() => {
-                      props.onClick();
-                      setIsOpen(false);
-                    }}
-                    className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
-                  >
-                    Reset to Fit
-                  </button>
-                )}
-              </Zoom>
-            </div> */}
           </div>
         </>
       )}
