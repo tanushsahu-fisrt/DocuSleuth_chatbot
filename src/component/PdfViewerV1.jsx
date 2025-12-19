@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Viewer, Worker } from "@react-pdf-viewer/core";
+import { Viewer, Worker , ThemeContext  } from "@react-pdf-viewer/core";
 import { highlightPlugin } from "@react-pdf-viewer/highlight";
 import { themePlugin } from '@react-pdf-viewer/theme';
 import { searchPlugin } from '@react-pdf-viewer/search';
@@ -24,7 +24,13 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pdfDocument, setPdfDocument] = useState(null);
   const [currentScale, setCurrentScale] = useState(0.75);
-  
+
+  const themePluginInstance = themePlugin();
+  const { SwitchThemeButton } = themePluginInstance;
+
+  const [currentTheme, setCurrentTheme] = useState('light');
+  const themeContext = { currentTheme, setCurrentTheme };
+
   // Initialize plugins
   const zoomPluginInstance = zoomPlugin();
   const { CurrentScale } = zoomPluginInstance;
@@ -37,7 +43,14 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
   });
   const { highlight, clearHighlights, jumpToNextMatch, jumpToPreviousMatch } = searchPluginInstance;
 
-  const themePluginInstance = themePlugin();
+  const normalizeText = (text) =>
+  text
+    .replace(/\s+/g, " ")
+    .replace(/•/g, "")
+    .replace(/\n/g, " ")
+    .trim()
+    .toLowerCase();
+
 
   // Function to find text coordinates using the search plugin approach
   const findTextInPage = async (pageIndex, searchText) => {
@@ -53,7 +66,7 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
       
       const highlights = [];
       const textItems = textContent.items;
-      
+
       // Build complete text with character positions
       let fullText = '';
       const charToItemMap = [];
@@ -69,9 +82,11 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
         }
       });
       
+      
       // Find all occurrences of search text
-      const searchLower = searchText.trim().toLowerCase();
-      const fullTextLower = fullText.toLowerCase();
+      const searchLower = normalizeText(searchText)
+      const fullTextLower = normalizeText(fullText)
+      
       let startIdx = 0;
       
       while ((startIdx = fullTextLower.indexOf(searchLower, startIdx)) !== -1) {
@@ -112,14 +127,17 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
             const width = ((maxX - minX) / viewport.width) * 100;
             const height = ((maxY - minY) / viewport.height) * 100;
             
+            const maxHeight = 8;
+            const maxWidth = 90;
+
             highlights.push({
               id: `highlight-${pageIndex}-${startIdx}-${Date.now()}`,
               pageIndex,
               position: {
                 left: Math.max(0, left),
                 top: Math.max(0, top),
-                width: Math.min(100, width),
-                height: Math.min(100, height),
+                width: Math.min(maxWidth, width),
+                height: Math.min(maxHeight, height),
               },
               content: {
                 text: searchText
@@ -156,7 +174,7 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
     
     for (const loc of locations) {
       const pageIndex = loc.pageIndex !== undefined ? loc.pageIndex : (loc.page - 1);
-      const textToHighlight = loc.highlightText || loc.full_text || loc.snippet;
+      const textToHighlight =  loc.highlightText.substring(0,50) || loc.snippet  || loc.full_text;
       
       if (textToHighlight && pdfDocument) {
         console.log(`Searching for text on page ${pageIndex + 1}:`, textToHighlight.substring(0, 50) + "...");
@@ -255,9 +273,10 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
     <div className="w-full flex flex-col items-center">
       <Header />
 
+      <ThemeContext.Provider value={themeContext}>
       {/* Search Bar */}
       <div className="w-[80%] bg-white shadow-md rounded-lg p-4 mb-1 flex items-center gap-3">
-
+        
         <CurrentPageLabel>
           {(props) => (
             <span className="text-sm font-medium text-gray-700">
@@ -265,6 +284,8 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
             </span>
           )}
         </CurrentPageLabel>
+
+        <SwitchThemeButton />
         
         <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
           <svg 
@@ -299,10 +320,6 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
           )}
         </div>
         
-        <CustomizeZoomButton 
-          zoomPluginInstance={zoomPluginInstance} 
-        />
-
         <button
           onClick={handleSearch}
           disabled={!searchKeyword.trim()}
@@ -310,6 +327,11 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
         >
           Search
         </button>
+        
+        <CustomizeZoomButton 
+          zoomPluginInstance={zoomPluginInstance} 
+        />
+
 
         {/* Navigation buttons */}
         <div className="flex gap-2">
@@ -346,27 +368,28 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
 
       {fileUrl && (
         <div 
-          className="shadow-xl mx-4 w-[80%]" 
+          className={`shadow-xl mx-4 w-[80%] rpv-core__viewer rpv-core__viewer--${currentTheme}`}
           style={{ 
             border: '1px solid rgba(0, 0, 0, 0.3)',
             height: "calc(100vh - 220px)",
+            borderColor: currentTheme === 'dark' ? '#454647' : 'rgba(0, 0, 0, 0.3)',
           }}
         >
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <Viewer 
-              fileUrl={fileUrl} 
-              plugins={[
-                highlightPluginInstance, 
-                themePluginInstance, 
-                searchPluginInstance,
-                zoomPluginInstance,
-                pageNavigationPluginInstance
-              ]}
-              defaultScale={0.75}
-              theme="auto"
-              onDocumentLoad={handleDocumentLoad}
-            />
-          </Worker>
+            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+              <Viewer 
+                fileUrl={fileUrl} 
+                plugins={[
+                  highlightPluginInstance, 
+                  themePluginInstance, 
+                  searchPluginInstance,
+                  zoomPluginInstance,
+                  pageNavigationPluginInstance
+                ]}
+                defaultScale={0.75}
+                theme={currentTheme}
+                onDocumentLoad={handleDocumentLoad}
+              />
+            </Worker>
         </div>
       )}
 
@@ -374,12 +397,12 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
         setFile={setFile}
         setIsFileUploaded={setIsFileUploaded}
         setFileName={setFileName}
-      />
+        />
 
       <FloatingButton 
         onHighlightLocations={handleHighlightLocations} 
-      />
-      
+        />
+      </ThemeContext.Provider>
     </div>
   );
 };

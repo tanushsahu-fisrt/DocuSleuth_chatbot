@@ -45,7 +45,6 @@ def ocr_images(image_bytes_list):
 
     return full_text.strip()
 
-
 def create_embeddings_from_pdf(filepath: Path, filename: str , collection_name: str):
     print(f"[INFO] Loading PDF: {filepath}")
 
@@ -60,7 +59,7 @@ def create_embeddings_from_pdf(filepath: Path, filename: str , collection_name: 
     chunks = []
 
     for idx, p in enumerate(pages):
-        page_num = p.metadata.get("page", idx + 1)
+        page_num = p.metadata.get("page", idx)
         
         # 1. Extract normal text
         text_content = p.page_content or ""
@@ -90,7 +89,7 @@ def create_embeddings_from_pdf(filepath: Path, filename: str , collection_name: 
             chunks.append({
                 "text": chunk,
                 "metadata": {
-                    "page": page_num ,
+                    "page": page_num + 1,  # 1-based indexing,
                     "source": filepath.name,
                     "ocr_used": bool(ocr_text),
                     "char_start": chunk_start,  # ← Position in page
