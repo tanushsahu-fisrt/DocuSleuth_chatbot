@@ -108,7 +108,7 @@ const ChatPopUp = ({ setOpenChat, onHighlightLocations }) => {
                         >
                           • Page {loc.page}: <span className="italic">{loc.label}</span>
                           <br />
-                          <span className="text-gray-500">"{loc.snippet}"</span>
+                          <span className="underline hover:decoration-dashed text-gray-500 ">"{loc.snippet}"</span>
                         </div>
                       ))}
                     </div>

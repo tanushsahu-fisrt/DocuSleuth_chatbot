@@ -1,3 +1,7 @@
+import CustomizeZoomButton from "./Document/CustomizeZoomButton";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+
 const DocHeader = ({ 
   searchKeyword, 
   setSearchKeyword, 

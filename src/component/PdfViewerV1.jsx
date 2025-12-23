@@ -17,7 +17,6 @@ import { FaChevronLeft  } from "react-icons/fa6";
 import { FaChevronRight } from "react-icons/fa";
 
 import FloatingButton from "./FloatingButton";
-import CustomizeZoomButton from "./Document/CustomizeZoomButton";
 import DocHeader from "./DocHeader";
 
 const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
