@@ -13,10 +13,12 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/highlight/lib/styles/index.css";
 import '@react-pdf-viewer/search/lib/styles/index.css';
 
+import { FaChevronLeft  } from "react-icons/fa6";
+import { FaChevronRight } from "react-icons/fa";
+
 import FloatingButton from "./FloatingButton";
-import Header from "./Header";
-import UploadNewDocButton from "./UploadNewDocButton";
 import CustomizeZoomButton from "./Document/CustomizeZoomButton";
+import DocHeader from "./DocHeader";
 
 const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
   const [highlights, setHighlights] = useState([]);
@@ -269,109 +271,39 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
 
   if (!file) return <div>No file uploaded</div>;
 
+
+
+
+
   return (
-    <div className="w-full flex flex-col items-center">
-      <Header />
+    <div className="w-full flex flex-col">
 
+      
       <ThemeContext.Provider value={themeContext}>
-      {/* Search Bar */}
-      <div className="w-[80%] bg-white shadow-md rounded-lg p-4 mb-1 flex items-center gap-3">
-        
-        <CurrentPageLabel>
-          {(props) => (
-            <span className="text-sm font-medium text-gray-700">
-              {`${props.currentPage + 1} / ${props.numberOfPages}`}
-            </span>
-          )}
-        </CurrentPageLabel>
+      
+      <DocHeader  
+        searchKeyword={searchKeyword}
+        setSearchKeyword={setSearchKeyword}
+        handleKeyPress={handleKeyPress}
+        handleClearSearch={handleClearSearch}
+        handleSearch={handleSearch}
+        CurrentPageLabel={CurrentPageLabel}
+        SwitchThemeButton={SwitchThemeButton}
+        zoomPluginInstance={zoomPluginInstance}
+        jumpToPreviousMatch={jumpToPreviousMatch}
+        jumpToNextMatch={jumpToNextMatch}
+        highlights={highlights}
+        setHighlights={setHighlights}
+      />
 
-        <SwitchThemeButton />
-        
-        <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
-          <svg 
-            className="w-5 h-5 text-gray-400" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-            />
-          </svg>
-          <input
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Search in document..."
-            className="flex-1 outline-none text-gray-700"
-          />
-          {searchKeyword && (
-            <button
-              onClick={handleClearSearch}
-              className="text-gray-400 hover:text-gray-600"
-              title="Clear search"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        
-        <button
-          onClick={handleSearch}
-          disabled={!searchKeyword.trim()}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-        >
-          Search
-        </button>
-        
-        <CustomizeZoomButton 
-          zoomPluginInstance={zoomPluginInstance} 
-        />
-
-
-        {/* Navigation buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={jumpToPreviousMatch}
-            className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-            title="Previous match"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={jumpToNextMatch}
-            className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-            title="Next match"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
-        {highlights.length > 0 && (
-          <button
-            onClick={() => setHighlights([])}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm flex items-center gap-2"
-            title="Clear all highlights"
-          >
-            <span>Clear ({highlights.length})</span>
-          </button>
-        )}
-      </div>
+      <div className="h-10" />
 
       {fileUrl && (
         <div 
-          className={`shadow-xl mx-4 w-[80%] rpv-core__viewer rpv-core__viewer--${currentTheme}`}
+          className={`shadow-xl mx-4 w-[70%] rpv-core__viewer rpv-core__viewer--${currentTheme} `}
           style={{ 
             border: '1px solid rgba(0, 0, 0, 0.3)',
-            height: "calc(100vh - 220px)",
+            height: "calc(100vh - 20px)",
             borderColor: currentTheme === 'dark' ? '#454647' : 'rgba(0, 0, 0, 0.3)',
           }}
         >
@@ -393,18 +325,13 @@ const PdfViewerV1 = ({ file, setFile, setIsFileUploaded, setFileName }) => {
         </div>
       )}
 
-      <UploadNewDocButton
-        setFile={setFile}
-        setIsFileUploaded={setIsFileUploaded}
-        setFileName={setFileName}
-        />
-
       <FloatingButton 
         onHighlightLocations={handleHighlightLocations} 
-        />
+      />
+      
       </ThemeContext.Provider>
     </div>
   );
 };
 
-export default PdfViewerV1;
+export default PdfViewerV1; 

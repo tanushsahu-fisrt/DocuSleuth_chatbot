@@ -62,11 +62,11 @@ const ChatPopUp = ({ setOpenChat, onHighlightLocations }) => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 w-[420px] h-[85vh] bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed bottom-5 right-3 w-[420px] h-[85vh] bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
       {/* HEADER */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 flex justify-between items-center shadow-md">
-        <h2 className="text-lg font-semibold">📄 DocuSleuth</h2>
+        <h2 className="text-lg font-semibold">DocuSleuth AI</h2>
         <button
           className="text-gray-200 hover:text-white text-xl"
           onClick={() => setOpenChat(false)}

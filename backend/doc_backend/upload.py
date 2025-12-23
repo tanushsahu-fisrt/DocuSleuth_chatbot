@@ -9,8 +9,8 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
 import pymupdf as fitz
-
 from easyocr import Reader
+
 ocr_reader = Reader(["en","hi"],gpu=True)
 
 from embeddings import embedding_model, qdrant_client
