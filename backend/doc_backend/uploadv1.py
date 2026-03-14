@@ -16,6 +16,8 @@ from easyocr import Reader
 ocr_reader = Reader(["en", "hi"], gpu=True)
 
 from embeddings import embedding_model, qdrant_client
+from gemini_embeddings import gemini_embed, GEMINI_VECTOR_DIM
+
 
 router = APIRouter()
 UPLOAD_DIR = Path("uploads")
@@ -196,6 +198,10 @@ def create_embeddings_from_pdf(filepath: Path, filename: str, collection_name: s
         vector_size = len(sample_embedding)
         print(f"[INFO] Detected embedding dimension: {vector_size}")
         
+        # vector_size = GEMINI_VECTOR_DIM
+        # print(f"[INFO] Gemini embedding dimension: {vector_size}")
+
+        
         # Create Qdrant collection
         qdrant_client.recreate_collection(
             collection_name=collection_name,
@@ -209,6 +215,7 @@ def create_embeddings_from_pdf(filepath: Path, filename: str, collection_name: s
         for i, chunk_data in enumerate(all_chunks):
             try:
                 emb = embedding_model.embed_query(chunk_data["text"])
+
                 
                 points.append(
                     PointStruct(

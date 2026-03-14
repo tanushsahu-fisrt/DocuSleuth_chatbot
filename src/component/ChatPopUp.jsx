@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { CiCircleChevDown } from "react-icons/ci";
+import { GoNorthStar } from "react-icons/go";
+
 
 const ChatPopUp = ({ setOpenChat, onHighlightLocations }) => {
   const [message, setMessage] = useState("");
@@ -61,12 +63,60 @@ const ChatPopUp = ({ setOpenChat, onHighlightLocations }) => {
     }
   };
 
+  const handleSummarizeDoc = () => {
+
+    setBotAnswering(true);
+
+    fetch("http://localhost:8000/api/summarize",{
+      method: "POST",
+      headers: {
+        "content-type" : "application/json"
+      },
+    })
+    .then( res => res.json() )
+    .then( data => {
+      let parsed;
+        try {
+          parsed = JSON.parse(data.response);
+        } catch {
+          parsed = { answer: data.response };
+        }
+
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            sender: "bot",
+            text: parsed.answer,
+            locations: parsed.locations,
+            summary: parsed.summary,
+          },
+        ]);
+
+        setBotAnswering(false);
+    })
+    .catch( err => {
+      console.log("summarize error:" , err);
+    })
+    .finally(() =>{
+      setBotAnswering(false);
+    })
+  }
+
+
   return (
     <div className="fixed bottom-5 right-3 w-[420px] h-[85vh] bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
       {/* HEADER */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 flex justify-between items-center shadow-md">
         <h2 className="text-lg font-semibold">DocuSleuth AI</h2>
+
+        <button
+          className="bg-white rounded-md justify-end text-red-600 flex items-center px-3 py-1 hover:bg-gray-200 font-semibold shadow-md hover:shadow-lg transition"
+          onClick={handleSummarizeDoc}
+        > 
+          <GoNorthStar  className="mr-2" size="20"  />
+          Summarize PDF
+        </button>
         <button
           className="text-gray-200 hover:text-white text-xl"
           onClick={() => setOpenChat(false)}
