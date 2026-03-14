@@ -8,11 +8,15 @@ from langchain_core.documents import Document
 import cohere
 from google import genai
 from google.genai import types
+import logging
 
 from embeddings import embedding_model, qdrant_client
 from config import COHERE_API_KEY, GEMINI_API_KEY
 
 router = APIRouter()
+
+logging.basicConfig(filename='query.log', level=logging.INFO , datefmt='%Y-%m-%d %H-%M-%S' , force=True)
+
 
 class QueryRequest(BaseModel):
     question: str
@@ -93,6 +97,8 @@ def rerank_with_cohere(query: str, docs: List[Document], top_k: int = 3, is_tabl
     """
     Rerank documents using Cohere's rerank API with dynamic threshold
     """
+    logging.info(f"Reranking {len(docs)} documents with cohere")
+    
     if not docs:
         return []
     
@@ -227,6 +233,8 @@ def get_vector_store(collection: str):
             embedding=embedding_model,
             client=qdrant_client
         )
+    
+    logging.info(f"using vector store for collection: {collection}")
     return VECTOR_STORE_CACHE[collection]
 
 @router.post("/query")
@@ -234,6 +242,8 @@ async def query_doc(body: QueryRequest):
     """
     Enhanced query endpoint with table-aware retrieval and generation
     """
+    
+    logging.info(f"Query: {body.question}")
     
     vector_store = get_vector_store(body.collection)
 
@@ -261,7 +271,7 @@ async def query_doc(body: QueryRequest):
     if table_query:
         initial_docs = boost_table_docs(initial_docs, table_query)
         table_count = sum(1 for d in initial_docs if d.metadata.get("has_table", False))
-        print(f"   📊 {table_count} documents contain tables")
+        print(f" {table_count} documents contain tables")
 
     # Step 2: Rerank with Cohere
     start_rerank = time.time()
@@ -325,6 +335,7 @@ async def query_doc(body: QueryRequest):
     try:
         answer = generate_answer_with_gemini(body.question, context, table_query)
         
+        
         end_generation = time.time()
         generation_time = round(end_generation - start_generation, 4)
         
@@ -370,4 +381,6 @@ async def query_doc(body: QueryRequest):
             "summary": "Error occurred during processing",
             "error": str(e)
         }
+        
+        
         return {"response": json.dumps(error_response)}
